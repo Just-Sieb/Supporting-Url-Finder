@@ -4,9 +4,9 @@ from tkinter import ttk
 class MainWindow(ttk.Frame):
     def __init__(self, master):
         self.master = master 
-        self.master.title(string="Supporting URL Finder")
-        self.master.minsize(width=300, height=300)
-        self.master.maxsize(width=300, height=600)
+        self.master.title(string="URL Finder")
+        self.master.minsize(width=250, height=300)
+        self.master.maxsize(width=250, height=300)
 
         self.frame = ttk.Frame(self.master)        
         self.entry = ttk.Entry(self.frame)
@@ -21,7 +21,7 @@ class MainWindow(ttk.Frame):
         self.list.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.list.yview)
 
-        self.frame.pack()
+        self.frame.pack(fill=BOTH)
         self.populate_list()
 
     def populate_list(self):
