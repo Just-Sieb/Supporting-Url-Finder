@@ -6,7 +6,7 @@ logger = logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w
 
 class LinkFinder(HTMLParser):
 	
-	def __init__(self, domain, spider = True):	
+	def __init__(self, domain, spider=True):	
 		HTMLParser.__init__(self)
 		
 		self.url_scanned = domain
