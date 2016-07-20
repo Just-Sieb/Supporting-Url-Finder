@@ -2,7 +2,7 @@ import requests
 from html.parser import HTMLParser
 import logging
 
-logging.basicConfig(filename="url.log", level=logging.INFO)
+logger = logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
 
 class LinkFinder(HTMLParser):
 	
@@ -140,5 +140,6 @@ class LinkFinder(HTMLParser):
 			if self.get_domain(url) == self.url_scanned:
 				logging.info("Spidering: " + url)
 				page = LinkFinder(url, spider=False) #todo: make this multithreaded
+				page.analyze()
 				for spider_url in page.urls:
 					self.urls.append(spider_url)
