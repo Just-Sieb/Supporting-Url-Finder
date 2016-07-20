@@ -1,5 +1,8 @@
 import requests
 from html.parser import HTMLParser
+import logging
+
+logging.basicConfig(filename="url.log", level=logging.INFO)
 
 class LinkFinder(HTMLParser):
 	
@@ -22,13 +25,6 @@ class LinkFinder(HTMLParser):
 		self.urls_unique_domains = []
 		self.suggest_urls = []
 			
-		self.curl_website()
-		
-		if self.spider:
-			self.spider_urls()
-		self.analyze()
-
-
 	def curl_website(self):
 		#todo: Switch to regex
 		if self.url_scanned[0:6] != "http://" or self.url_scanned[0:7] != "https://":
@@ -36,6 +32,7 @@ class LinkFinder(HTMLParser):
 
 		r = requests.get(self.url_scanned)
 		if r.status_code is not requests.codes.ok:
+			logging.error("When try to get page got " + str(r.status_code))
 			raise http_error
 
 		self.feed(r.text)
@@ -79,6 +76,11 @@ class LinkFinder(HTMLParser):
 	# After running the feed function, call this function to run the analysis.
 	# WIP
 	def analyze(self):
+		logging.info("Stated analyzer for " + self.url_scanned)
+
+		self.curl_website()
+		if self.spider:
+			self.spider_urls()
 		self.normalize_all_urls()
 		self.get_unique_domains()
 		
@@ -136,6 +138,7 @@ class LinkFinder(HTMLParser):
 	def spider_urls(self):
 		for url in self.urls_a: #these will all be link
 			if self.get_domain(url) == self.url_scanned:
+				logging.info("Spidering: " + url)
 				page = LinkFinder(url, spider=False) #todo: make this multithreaded
 				for spider_url in page.urls:
 					self.urls.append(spider_url)

@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk
+from linkanalyzer import *
 
 class MainWindow(ttk.Frame):
     def __init__(self, master):
@@ -8,9 +9,13 @@ class MainWindow(ttk.Frame):
         self.master.minsize(width=250, height=300)
         self.master.maxsize(width=250, height=300)
 
+        self.url = StringVar()
+        self.url_analyzer = None
+
         self.frame = ttk.Frame(self.master)        
-        self.entry = ttk.Entry(self.frame)
-        self.enter = ttk.Button(self.frame, text="Find Urls")
+        self.entry = ttk.Entry(self.frame, textvariable=self.url)
+        self.entry.bind('<Return>', self.on_enter)
+        self.enter = ttk.Button(self.frame, text="Find Urls", command=self.on_click)
         self.list = Listbox(self.frame, height=15)
         self.entry.grid(row=0, column=0, sticky=W, padx=5, pady=5)
         self.enter.grid(row=0, column=1, sticky=E, padx=5, pady=5)
@@ -22,11 +27,18 @@ class MainWindow(ttk.Frame):
         self.scrollbar.config(command=self.list.yview)
 
         self.frame.pack(fill=BOTH)
-        self.populate_list()
 
     def populate_list(self):
-        for num in range(30):
-            self.list.insert(END, num)
+        for url in self.url_analyzer.urls:
+            self.list.insert(END, url)
+
+    def on_click(self):
+        self.url_analyzer = LinkFinder(self.url.get())
+        self.url_analyzer.analyze()
+        self.populate_list()
+
+    def on_enter(self, event):
+        self.on_click()
 
 if __name__ == '__main__':
     root = Tk()
