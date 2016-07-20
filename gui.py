@@ -29,6 +29,7 @@ class MainWindow(ttk.Frame):
         self.frame.pack(fill=BOTH)
 
     def populate_list(self):
+        self.list.delete(0, END)
         for url in self.url_analyzer.urls:
             self.list.insert(END, url)
 
