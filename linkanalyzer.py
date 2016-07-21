@@ -88,7 +88,7 @@ class LinkFinder(HTMLParser):
 
 	def normalize_all_urls(self):
 		for url in self.urls:
-			if (url[0:6] != "http://") and (url[0:7] != "https://") and (len(url) != 0):
+			if (url[0:7] != "http://") and (url[0:7] != "https://") and (len(url) != 0):
 				if url[0] == "/":
 					if self.base_url is None:
 						url = self.url_scanned + url	
@@ -100,7 +100,21 @@ class LinkFinder(HTMLParser):
 					else:
 						url = self.url_scanned[0:-2] + url
 		pass
-	
+
+	def normalize_url(self, url):
+		if (url[0:7] != "http://") and (url[0:8] != "https://") and (len(url) != 0):
+			if url[0] == "/":
+				if self.base_url is None:
+					url = self.url_scanned + url	
+				else:
+					url = self.base_url + url
+			else:
+				if self.url_scanned[-1] == "/":
+					url = self.url_scanned + url
+				else:
+					url = self.url_scanned[0:-2] + url
+		return url
+
 	# Removes email and phone number urls
 	# WIP
 	def remove_junk_urls(self):
