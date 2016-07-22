@@ -11,6 +11,7 @@ class LinkFinder(HTMLParser):
 		HTMLParser.__init__(self)
 		
 		self.url_scanned = domain
+		self.redirected_url = None
 		self.base_url = None
 		self.spider = spider
 
@@ -29,16 +30,17 @@ class LinkFinder(HTMLParser):
 
 
 	def curl_website(self):
-
+		url = self.url_scanned
 		http_regex = re.compile(r'^https?:\/\/')
-		if http_regex.match(self.url_scanned) is None:
-			url = "http://" + self.url_scanned
+		if http_regex.match(url) is None:
+			url = "http://" + url
 
 		logging.info("Http get request for %s", url)	
 		r = requests.get(url)
 		if r.status_code is not requests.codes.ok:
 			logging.error("When try to get page got " + str(r.status_code))
 			raise http_error
+		self.redirected_url = r.url
 
 		self.feed(r.text)
 
@@ -90,6 +92,7 @@ class LinkFinder(HTMLParser):
 		self.get_unique_domains()
 		
 		pass	
+		
 	# this function is to create a full url if it is only give the directory
 	# example: if facebook has the url "/profile/this_person" then it will
 	# return the url facebook.com/profile/this_person
@@ -99,7 +102,9 @@ class LinkFinder(HTMLParser):
 		pass
 
 	def normalize_url(self, url):
-		if (url[0:7] != "http://") and (url[0:8] != "https://") and (len(url) != 0):
+		shortened_http_regex = re.compile(r'^//')
+		http_regex = re.compile(r'^https?:\/\/')
+		if http_regex.match(url) is None: 
 			if url[0] == "/":
 				if self.base_url is None:
 					url = self.url_scanned + url	
@@ -110,6 +115,10 @@ class LinkFinder(HTMLParser):
 					url = self.url_scanned + url
 				else:
 					url = self.url_scanned[0:-2] + url
+		elif shortened_http_regex.match(url) == 1:
+			url = "http:" + url
+			
+			pass
 		return url
 
 	# Removes email and phone number urls
