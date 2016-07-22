@@ -1,6 +1,7 @@
 import requests
 from html.parser import HTMLParser
 import logging
+import re
 
 logger = logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
 
@@ -28,8 +29,9 @@ class LinkFinder(HTMLParser):
 
 
 	def curl_website(self):
-		#todo: Switch to regex
-		if (self.url_scanned[0:7] != "http://") or (self.url_scanned[0:8] != "https://"):
+
+		http_regex = re.compile(r'^https?:\/\/')
+		if http_regex.match(self.url_scanned) is None:
 			url = "http://" + self.url_scanned
 
 		logging.info("Http get request for %s", url)	
