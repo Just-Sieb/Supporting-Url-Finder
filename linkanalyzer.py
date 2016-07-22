@@ -24,13 +24,16 @@ class LinkFinder(HTMLParser):
 		self.urls_a = []
 		self.urls_unique_domains = []
 		self.suggest_urls = []
-			
+		self.url_freq = dict()
+
+
 	def curl_website(self):
 		#todo: Switch to regex
-		if self.url_scanned[0:6] != "http://" or self.url_scanned[0:7] != "https://":
-			self.url_scanned = "http://" + self.url_scanned
+		if (self.url_scanned[0:7] != "http://") or (self.url_scanned[0:8] != "https://"):
+			url = "http://" + self.url_scanned
 
-		r = requests.get(self.url_scanned)
+		logging.info("Http get request for %s", url)	
+		r = requests.get(url)
 		if r.status_code is not requests.codes.ok:
 			logging.error("When try to get page got " + str(r.status_code))
 			raise http_error
@@ -85,20 +88,12 @@ class LinkFinder(HTMLParser):
 		self.get_unique_domains()
 		
 		pass	
-
+	# this function is to create a full url if it is only give the directory
+	# example: if facebook has the url "/profile/this_person" then it will
+	# return the url facebook.com/profile/this_person
 	def normalize_all_urls(self):
 		for url in self.urls:
-			if (url[0:7] != "http://") and (url[0:7] != "https://") and (len(url) != 0):
-				if url[0] == "/":
-					if self.base_url is None:
-						url = self.url_scanned + url	
-					else:
-						url = self.base_url + url
-				else:
-					if self.url_scanned[-1] == "/":
-						url = self.url_scanned + url
-					else:
-						url = self.url_scanned[0:-2] + url
+			url = self.normalize_url(url)	
 		pass
 
 	def normalize_url(self, url):
@@ -120,12 +115,6 @@ class LinkFinder(HTMLParser):
 	def remove_junk_urls(self):
 		pass
 
-	# this function is to create a full url if it is only give the directory
-	# example: if facebook has the url "/profile/this_person" then it will
-	# return the url facebook.com/profile/this_person
-	# WIP
-	def normalize_url(self, url):
-		pass
 		
 	def get_domain(self, url):
 		return url.split("//")[-1].split('/')[0]
@@ -137,6 +126,9 @@ class LinkFinder(HTMLParser):
 			domain = self.get_domain(url)
 			if domain not in self.urls_unique_domains:
 				self.urls_unique_domains.append(domain)
+				self.url_freq[domain] = 1
+			else:
+				self.url_freq[domain] += 1
 		pass
 	
 	# WIP
@@ -150,8 +142,9 @@ class LinkFinder(HTMLParser):
 	# Future Feature: run the analysis on subpages on the domain to get more accurate results
 	# WIP
 	def spider_urls(self):
-		for url in self.urls_a: #these will all be link
-			if self.get_domain(url) == self.url_scanned:
+		for url in self.urls_a: #these will all be links
+			logging.info("Spider: %s - Main: %s", self.get_domain(url), self.url_scanned)
+			if self.get_domain(url).find(self.url_scanned) != 0:
 				logging.info("Spidering: " + url)
 				page = LinkFinder(url, spider=False) #todo: make this multithreaded
 				page.analyze()
