@@ -4,7 +4,7 @@ from linkanalyzer import *
 
 class MainWindow(ttk.Frame):
     def __init__(self, master):
-        self.master = master 
+        self.master = master
         self.master.title(string="URL Finder")
         self.master.minsize(width=250, height=300)
         self.master.maxsize(width=250, height=300)
@@ -12,7 +12,7 @@ class MainWindow(ttk.Frame):
         self.url = StringVar()
         self.url_analyzer = None
 
-        self.frame = ttk.Frame(self.master)        
+        self.frame = ttk.Frame(self.master)
         self.entry = ttk.Entry(self.frame, textvariable=self.url)
         self.entry.bind('<Return>', self.on_enter)
         self.enter = ttk.Button(self.frame, text="Find Urls", command=self.on_click)
@@ -30,7 +30,7 @@ class MainWindow(ttk.Frame):
 
     def populate_list(self):
         self.list.delete(0, END)
-        for url in self.url_analyzer.urls:
+        for url in self.url_analyzer.normalized_urls:
             self.list.insert(END, url)
 
     def on_click(self):
