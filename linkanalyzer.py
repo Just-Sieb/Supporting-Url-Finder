@@ -1,6 +1,7 @@
 import requests
 from html.parser import HTMLParser
 import logging
+import re
 
 logger = logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
 
@@ -10,6 +11,7 @@ class LinkFinder(HTMLParser):
 		HTMLParser.__init__(self)
 
 		self.url_scanned = domain
+		self.redirected_url = None
 		self.base_url = None
 		self.spider = spider
 
@@ -25,6 +27,8 @@ class LinkFinder(HTMLParser):
 		self.urls_unique_domains = []
 		self.normalized_urls = []
 		self.suggest_urls = []
+		self.url_freq = dict()
+
 
 	def curl_website(self):
 
@@ -36,9 +40,11 @@ class LinkFinder(HTMLParser):
 
 		logging.info(self.url_scanned)
 		r = requests.get(self.url_scanned)
+
 		if r.status_code is not requests.codes.ok:
 			logging.error("When try to get page got " + str(r.status_code))
 			raise http_error
+		self.redirected_url = r.url
 
 		self.feed(r.text)
 
@@ -139,6 +145,9 @@ class LinkFinder(HTMLParser):
 			domain = self.get_domain(url)
 			if domain not in self.urls_unique_domains:
 				self.urls_unique_domains.append(domain)
+				self.url_freq[domain] = 1
+			else:
+				self.url_freq[domain] += 1
 		pass
 
 	# WIP
@@ -152,8 +161,9 @@ class LinkFinder(HTMLParser):
 	# Future Feature: run the analysis on subpages on the domain to get more accurate results
 	# WIP
 	def spider_urls(self):
-		for url in self.urls_a: #these will all be link
-			if self.get_domain(url) == self.url_scanned:
+		for url in self.urls_a: #these will all be links
+			logging.info("Spider: %s - Main: %s", self.get_domain(url), self.url_scanned)
+			if self.get_domain(url).find(self.url_scanned) != 0:
 				logging.info("Spidering: " + url)
 				page = LinkFinder(url, spider=self.spider) #todo: make this multithreaded
 				page.analyze()
