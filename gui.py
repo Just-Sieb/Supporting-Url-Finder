@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 from linkanalyzer import *
+import threading
 
 class MainWindow(ttk.Frame):
     def __init__(self, master):
@@ -11,6 +12,7 @@ class MainWindow(ttk.Frame):
 
         self.url = StringVar()
         self.url_analyzer = None
+        self.list_of_urls = []
 
         self.frame = ttk.Frame(self.master)
         self.entry = ttk.Entry(self.frame, textvariable=self.url)
@@ -30,16 +32,27 @@ class MainWindow(ttk.Frame):
 
     def populate_list(self):
         self.list.delete(0, END)
-        for url in self.url_analyzer.normalized_urls:
-            self.list.insert(END, url)
+        for url, percentage in self.url_analyzer.url_precentage.items():
+            if percentage >= 1:
+                row = str(round(percentage)) + ": " + url
+                self.list_of_urls.append(row)
+
+        for row in self.list_of_urls:
+            self.list.insert(END, row)
 
     def on_click(self):
-        self.url_analyzer = LinkFinder(self.url.get())
-        self.url_analyzer.analyze()
-        self.populate_list()
+        self.list.delete(0, END)
+        url = self.url.get()
+        t = threading.Thread(target=self.run_scan, args=(url,))
+        t.start()
 
     def on_enter(self, event):
         self.on_click()
+
+    def run_scan(self, url):
+        self.url_analyzer = LinkFinder(url, spider=1)
+        self.url_analyzer.analyze()
+        self.populate_list()
 
 if __name__ == '__main__':
     root = Tk()

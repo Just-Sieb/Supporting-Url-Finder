@@ -28,6 +28,7 @@ class LinkFinder(HTMLParser):
 		self.normalized_urls = []
 		self.suggest_urls = []
 		self.url_freq = dict()
+		self.url_precentage = dict()
 
 
 	def curl_website(self):
@@ -87,13 +88,20 @@ class LinkFinder(HTMLParser):
 	# After running the feed function, call this function to run the analysis.
 	# WIP
 	def analyze(self):
-		logging.info("Stated analyzer for " + self.url_scanned)
+		#logging.info("Stated analyzer for " + self.url_scanned)
 
-		self.curl_website()
-		if self.spider > 0:
-			self.spider_urls()
-		self.normalize_all_urls()
-		self.get_unique_domains()
+		try:
+			self.curl_website()
+
+			self.remove_junk_urls()
+			if self.spider > 0:
+				self.spider_urls()
+
+			self.normalize_all_urls()
+			self.get_unique_domains()
+			self.get_domain_percentage()
+		except:
+			pass
 
 
 	def normalize_all_urls(self):
@@ -107,7 +115,7 @@ class LinkFinder(HTMLParser):
 	def normalize_url(self, url):
 		#logging.info("URL_BEFORE: " + url)
 		if (url[0:7] != "http://") and (url[0:8] != "https://") and (len(url) != 0):
-			logging.info(url[0:2])
+			#logging.info(url[0:2])
 			if url[0:2] == "//":
 				url = "http:" + url
 			elif url[0] == "/":
@@ -120,6 +128,11 @@ class LinkFinder(HTMLParser):
 					url = self.url_scanned + url[1:]
 				else:
 					url = self.base_url + url[1:]
+			elif url[0] == "?":
+				if self.base_url is None:
+					url = self.url_scanned + "/" + url[1:]
+				else:
+					url = self.base_url + "/" + url[1:]
 			else:
 				if self.url_scanned[-1] == "/":
 					url = self.url_scanned + url
@@ -132,7 +145,12 @@ class LinkFinder(HTMLParser):
 	# Removes email and phone number urls
 	# WIP
 	def remove_junk_urls(self):
-		pass
+		self.urls_a = [x for x in self.urls_a if not self.junk_url(x)]
+
+	def junk_url(self, url):
+		if url[0:11] == "javascript:":
+			#logging.info("Removing junk url in list")
+			return True
 
 
 	def get_domain(self, url):
@@ -141,8 +159,10 @@ class LinkFinder(HTMLParser):
 
 
 	def get_unique_domains(self):
-		for url in self.urls:
+		for url in self.normalized_urls:
+			#logging.info("URL: " + url)
 			domain = self.get_domain(url)
+			#logging.info("DOMAIN: " + domain)
 			if domain not in self.urls_unique_domains:
 				self.urls_unique_domains.append(domain)
 				self.url_freq[domain] = 1
@@ -152,20 +172,26 @@ class LinkFinder(HTMLParser):
 
 	# WIP
 	def get_domain_percentage(self):
+		total_count = 0
+		for key, value in self.url_freq.items():
+			total_count += value
+
+		for key in self.url_freq:
+			count = self.url_freq[key]
+			self.url_precentage[key] = (count * 100) / total_count
+			logging.info("Percentage for " + key + ": " + str(self.url_precentage[key]))
+
 		pass
 
-	# WIP
-	def predict_importance(self):
-		pass
 
 	# Future Feature: run the analysis on subpages on the domain to get more accurate results
 	# WIP
 	def spider_urls(self):
 		for url in self.urls_a: #these will all be links
-			logging.info("Spider: %s - Main: %s", self.get_domain(url), self.url_scanned)
+			#logging.info("Spider: %s - Main: %s", self.get_domain(url), self.url_scanned)
 			if self.get_domain(url).find(self.url_scanned) != 0:
-				logging.info("Spidering: " + url)
-				page = LinkFinder(url, spider=self.spider) #todo: make this multithreaded
+				#logging.info("Spidering: " + url)
+				page = LinkFinder(url, spider=self.spider-1)  #todo: make this multithreaded
 				page.analyze()
 				for spider_url in page.urls:
 					self.urls.append(spider_url)
