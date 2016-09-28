@@ -5,6 +5,7 @@ This tool is maintain by Justin Siebert and is licensed under the MIT License
 '''
 
 from tkinter import *
+from tkinter import messagebox
 from tkinter import ttk
 from linkanalyzer import LinkFinder
 from threadmanager import ProcessManager
@@ -15,6 +16,7 @@ import logging
 
 
 logger = None
+version = "1.0.0"
 
 
 class MainWindow(ttk.Frame):
@@ -26,6 +28,7 @@ class MainWindow(ttk.Frame):
 
         self.show_all = BooleanVar()
         self.file = Menu(self.master, tearoff=False)
+        self.file.add_command(label="About", command=self.display_about)
         self.file.add_command(label="Exit", command=self.master.quit)
         self.edit = Menu(self.master, tearoff=False)
         self.edit.add_checkbutton(label="Show All", variable=self.show_all, command=self.update_list)
@@ -103,6 +106,14 @@ class MainWindow(ttk.Frame):
     def update_list(self):
         self.list.delete(0, END)
         self.populate_list(self.url_dict)
+
+
+    def display_about(self):
+        about = '''
+                Supporting Url Finder
+                Version: ''' + version
+        messagebox.showinfo("About", about)
+        
 
 
 
