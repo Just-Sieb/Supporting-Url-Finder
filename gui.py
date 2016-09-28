@@ -1,3 +1,9 @@
+'''
+Supporting Url Finder is opensource tool for finding what domains a site uses to host background content.
+
+This tool is maintain by Justin Siebert and is licensed under the MIT License
+'''
+
 from tkinter import *
 from tkinter import ttk
 from linkanalyzer import LinkFinder
