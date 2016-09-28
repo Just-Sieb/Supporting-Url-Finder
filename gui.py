@@ -15,8 +15,8 @@ class MainWindow(ttk.Frame):
     def __init__(self, master):
         self.master = master
         self.master.title(string="URL Finder")
-        self.master.minsize(width=250, height=300)
-        self.master.maxsize(width=300, height=500)
+        self.master.minsize(width=250, height=250)
+        self.master.maxsize(width=300, height=300)
 
         self.show_all = BooleanVar()
         self.file = Menu(self.master, tearoff=False)

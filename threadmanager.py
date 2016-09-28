@@ -37,9 +37,6 @@ class ProcessManager(Thread):
         self.start_process(self.init_url)
         pass
 
-    def build_list(self):
-        pass
-
 
     def add_urls_to_list(self, scan_urls, potential_urls):
         for url in scan_urls:
@@ -75,7 +72,7 @@ class ProcessManager(Thread):
 
 
     def process_manager(self):
-        # We test if active threads is equal to one because this will be in an active thread
+        # We test if active threads is equal to one because this will be an active thread
         if (self.count == 0 or len(self.urls_to_scan) == 0) and self.active_threads == 1:
             logging.info("Closing Thread manager")
             logging.info("Number of threads created: %d", self.number_of_threads_created)
@@ -101,7 +98,7 @@ class ProcessManager(Thread):
         self.get_domain_percentage()
         pass
 
-
+    # Returns the domain of the url given
     def get_domain(self, url):
         domain = None
         try:
@@ -112,7 +109,8 @@ class ProcessManager(Thread):
             logging.info("URL: %s", url)
         return domain
 
-
+    
+    # Finds the unique domains and the number of times they show up
     def get_unique_domains(self):
         for url in self.potential_urls:
             domain = self.get_domain(url)
@@ -125,7 +123,7 @@ class ProcessManager(Thread):
                 else:
                     self.url_freq[domain] += 1
 
-
+    # Calculates the percentage a domain shows up in the potential URLs list
     def get_domain_percentage(self):
         total_count = 0
         for key, value in self.url_freq.items():

@@ -3,7 +3,6 @@ from requests import HTTPError
 from requests.exceptions import InvalidURL, SSLError, MissingSchema, ConnectionError
 from html.parser import HTMLParser
 import logging
-#from gui import logger
 import re
 #import yappi
 
@@ -92,7 +91,6 @@ class LinkFinder(HTMLParser):
 		pass
 
 	# After running the feed function, call this function to run the analysis.
-	# WIP
 	def analyze(self):
 		#print("Running analyzer")
 		#count += 1
