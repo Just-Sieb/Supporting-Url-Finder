@@ -5,7 +5,7 @@ import time
 import logging
 
 
-logger = logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
+logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
 
 
 class ProcessManager(Thread):
@@ -18,6 +18,8 @@ class ProcessManager(Thread):
 
         self.more_threads_available = True
         self.active_threads = 0
+        self.number_of_threads_created = 0
+
 
         self.potential_urls = []
         self.urls_unique_domains = []
@@ -31,6 +33,7 @@ class ProcessManager(Thread):
 
 
     def run(self):
+        logging.info("Starting url analyzer for %s", self.init_url)
         self.start_process(self.init_url)
         pass
 
@@ -62,20 +65,25 @@ class ProcessManager(Thread):
 
 
     def start_analyser(self, url):
-        logging.info("Started new thread. Number of active threads %d", self.active_threads)
+        #logging.info("Started new thread. Number of active threads %d", self.active_threads)
+        self.number_of_threads_created += 1
         lf = LinkFinder(url)
         lf.analyze()
         self.add_urls_to_list(lf.urls_a ,lf.normalized_urls)
-        self.active_threads -= 1
         self.process_manager()
+        self.active_threads -= 1
 
 
     def process_manager(self):
-        if (self.count == 0 or len(self.urls_to_scan) == 0) and self.active_threads == 0:
+        # We test if active threads is equal to one because this will be in an active thread
+        if (self.count == 0 or len(self.urls_to_scan) == 0) and self.active_threads == 1:
             logging.info("Closing Thread manager")
+            logging.info("Number of threads created: %d", self.number_of_threads_created)
             self.analyze_potential_urls()
             self.continue_scanning = False
         else:
+            if self.active_threads < 100:
+                self.more_threads_available = True
             while self.more_threads_available:
                 try:
                     url = self.urls_to_scan.popleft()
@@ -95,24 +103,33 @@ class ProcessManager(Thread):
 
 
     def get_domain(self, url):
-        return url.split("//")[-1].split('/')[0]
+        domain = None
+        try:
+            domain = url.split("//")[1].split('/')[0]
+        except IndexError:
+            domain = url.split("//")[-1].split('/')[0]
+        if domain == "":
+            logging.info("URL: %s", url)
+        return domain
 
 
     def get_unique_domains(self):
         for url in self.potential_urls:
-            #logging.info("URL: " + url)
             domain = self.get_domain(url)
-            #logging.info("DOMAIN: " + domain)
-            if domain not in self.urls_unique_domains:
-                self.urls_unique_domains.append(domain)
-                self.url_freq[domain] = 1
-            else:
-                self.url_freq[domain] += 1
+
+            if url != "" and url is not None:
+                #logging.info("Url Length: %d - Url: %s", len(url), url)
+                if domain not in self.urls_unique_domains:
+                    self.urls_unique_domains.append(domain)
+                    self.url_freq[domain] = 1
+                else:
+                    self.url_freq[domain] += 1
 
 
     def get_domain_percentage(self):
         total_count = 0
         for key, value in self.url_freq.items():
+            #logging.info("Key: %s - Value: %d", key, value)
             total_count += value
 
         for key in self.url_freq:

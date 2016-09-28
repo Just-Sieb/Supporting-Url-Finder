@@ -1,10 +1,13 @@
 import requests
+from requests import HTTPError
+from requests.exceptions import InvalidURL, SSLError, MissingSchema, ConnectionError
 from html.parser import HTMLParser
 import logging
+#from gui import logger
 import re
 #import yappi
 
-logger = logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
+logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
 
 
 class LinkFinder(HTMLParser):
@@ -28,6 +31,8 @@ class LinkFinder(HTMLParser):
 		self.urls_a = []
 		self.normalized_urls = []
 
+		self.status_code = None
+
 
 	def curl_website(self):
 
@@ -37,12 +42,15 @@ class LinkFinder(HTMLParser):
 		if self.url_scanned[-1] == "/":
 			self.url_scanned = self.url_scanned[0:-1]
 
-		#logging.info(self.url_scanned)
-		r = requests.get(self.url_scanned)
+		header = {"user-agent": "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"}
 
-		if r.status_code is not requests.codes.ok:
-			logging.error("When try to get page got " + str(r.status_code))
-			raise http_error
+		r = requests.get(self.url_scanned, headers=header, verify=False)
+		self.status_code = r.status_code
+
+		if self.status_code is not requests.codes.ok:
+			logging.error("Page: %s = ERROR: %d ", self.url_scanned, r.status_code)
+			raise HTTPError
+
 		self.redirected_url = r.url
 
 		self.feed(r.text)
@@ -92,10 +100,22 @@ class LinkFinder(HTMLParser):
 
 		try:
 			self.curl_website()
-			self.remove_junk_urls()
-			self.normalize_all_urls()
-		except:
-			print("There was an error")
+		except HTTPError as err:
+			logging.error("HTTPError")
+			logging.error(err)
+		except InvalidURL as err:
+			logging.error(err)
+		except SSLError as err:
+			logging.error(err)
+		except MissingSchema as err:
+			logging.error(err)
+		except ConnectionError as err:
+			logging.error(err)
+
+
+
+		self.remove_junk_urls()
+		self.normalize_all_urls()
 
 
 	def normalize_all_urls(self):

@@ -8,7 +8,7 @@ import time
 import logging
 
 
-logger = logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
+logger = None
 
 
 class MainWindow(ttk.Frame):
@@ -50,6 +50,7 @@ class MainWindow(ttk.Frame):
 
     def on_click(self):
         self.list.delete(0, END)
+        self.enter.config(text="Running")
         url = self.url.get()
         t = threading.Thread(target=self.run_scan, args=(url,))
         t.start()
@@ -63,10 +64,12 @@ class MainWindow(ttk.Frame):
             time.sleep(1)
             count += 1
             if count > 20:
+                logging.info("Reached max timeout")
+                pm.analyze_potential_urls()
                 break
 
         self.populate_list(pm.url_percentage)
-        print("Out of thread manager")
+        self.enter.config(text="Find Urls")
 
 
     def on_enter(self, event):
@@ -77,4 +80,5 @@ class MainWindow(ttk.Frame):
 if __name__ == '__main__':
     root = Tk()
     app = MainWindow(root)
+    logger = logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
     root.mainloop()
