@@ -5,7 +5,7 @@ import time
 import logging
 
 
-logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
+logging.getLogger(__name__)
 
 
 class ProcessManager(Thread):
@@ -105,8 +105,6 @@ class ProcessManager(Thread):
             domain = url.split("//")[1].split('/')[0]
         except IndexError:
             domain = url.split("//")[-1].split('/')[0]
-        if domain == "":
-            logging.info("URL: %s", url)
         return domain
 
     

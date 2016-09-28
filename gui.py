@@ -14,16 +14,21 @@ import time
 #import yappi
 import logging
 
+DEBUG = False
+VERSION = "1.0.0"
 
-logger = None
-version = "1.0.0"
+if DEBUG:
+    logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
+else:
+    logging.basicConfig(level=logging.ERROR, format='%(levelname)s: %(asctime)s - %(message)s')
+
 
 
 class MainWindow(ttk.Frame):
     def __init__(self, master):
         self.master = master
         self.master.title(string="URL Finder")
-        self.master.minsize(width=250, height=250)
+        self.master.minsize(width=250, height=300)
         self.master.maxsize(width=300, height=300)
 
         self.show_all = BooleanVar()
@@ -111,7 +116,7 @@ class MainWindow(ttk.Frame):
     def display_about(self):
         about = '''
                 Supporting Url Finder
-                Version: ''' + version
+                Version: ''' + VERSION
         messagebox.showinfo("About", about)
         
 
@@ -120,5 +125,4 @@ class MainWindow(ttk.Frame):
 if __name__ == '__main__':
     root = Tk()
     app = MainWindow(root)
-    logger = logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
     root.mainloop()

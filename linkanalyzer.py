@@ -6,7 +6,7 @@ import logging
 import re
 #import yappi
 
-logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
+logging.getLogger(__name__)
 
 
 class LinkFinder(HTMLParser):
