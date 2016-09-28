@@ -2,8 +2,10 @@ import requests
 from html.parser import HTMLParser
 import logging
 import re
+import yappi
 
 logger = logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
+
 
 class LinkFinder(HTMLParser):
 
@@ -88,20 +90,22 @@ class LinkFinder(HTMLParser):
 	# After running the feed function, call this function to run the analysis.
 	# WIP
 	def analyze(self):
+		#print("Running analyzer")
+		#count += 1
 		#logging.info("Stated analyzer for " + self.url_scanned)
 
 		try:
 			self.curl_website()
 
 			self.remove_junk_urls()
-			if self.spider > 0:
-				self.spider_urls()
+			#if self.spider > 0:
+				#self.spider_urls()
 
 			self.normalize_all_urls()
-			self.get_unique_domains()
-			self.get_domain_percentage()
+			#self.get_unique_domains()
+			#self.get_domain_percentage()
 		except:
-			pass
+			print("There was an error")
 
 
 	def normalize_all_urls(self):
@@ -146,6 +150,7 @@ class LinkFinder(HTMLParser):
 	# WIP
 	def remove_junk_urls(self):
 		self.urls_a = [x for x in self.urls_a if not self.junk_url(x)]
+
 
 	def junk_url(self, url):
 		if url[0:11] == "javascript:":
