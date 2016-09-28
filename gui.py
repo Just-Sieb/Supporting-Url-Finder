@@ -4,7 +4,7 @@ from linkanalyzer import LinkFinder
 from threadmanager import ProcessManager
 import threading
 import time
-import yappi
+#import yappi
 import logging
 
 
@@ -38,24 +38,24 @@ class MainWindow(ttk.Frame):
 
         self.frame.pack(fill=BOTH)
 
-    def populate_list(self):
-        self.list.delete(0, END)
-        for url, percentage in self.url_analyzer.url_precentage.items():
+    def populate_list(self, url_percentage):
+        del self.list_of_urls[:]
+        for url, percentage in sorted(url_percentage.items(), key=lambda x: x[1]):
             if percentage >= 1:
                 row = str(round(percentage)) + ": " + url
                 self.list_of_urls.append(row)
 
         for row in self.list_of_urls:
-            self.list.insert(END, row)
+            self.list.insert(0, row)
 
     def on_click(self):
         self.list.delete(0, END)
         url = self.url.get()
-        t = threading.Thread(target=self.test_run_scan, args=(url,))
+        t = threading.Thread(target=self.run_scan, args=(url,))
         t.start()
 
 
-    def test_run_scan(self, url):
+    def run_scan(self, url):
         pm = ProcessManager(url)
         pm.start()
         count = 0
@@ -63,24 +63,15 @@ class MainWindow(ttk.Frame):
             time.sleep(1)
             count += 1
             if count > 20:
-                print("count above 20")
                 break
-        print("Out of test")
+
+        self.populate_list(pm.url_percentage)
+        print("Out of thread manager")
 
 
     def on_enter(self, event):
         self.on_click()
 
-    def run_scan(self, url):
-        yappi.start()
-        del self.url_analyzer
-        self.url_analyzer = LinkFinder(url, spider=1)
-        self.url_analyzer.analyze()
-        self.populate_list()
-
-        #yappi.get_func_stats().print_all(out=sys.stdout, columns={0:("name",100), 1:("ncall", 5), 2:("tsub", 8), 3:("ttot", 8), 4:("tavg",8)})
-
-        #print(count)
 
 
 if __name__ == '__main__':

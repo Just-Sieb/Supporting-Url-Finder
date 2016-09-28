@@ -2,7 +2,7 @@ import requests
 from html.parser import HTMLParser
 import logging
 import re
-import yappi
+#import yappi
 
 logger = logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
 
@@ -26,11 +26,7 @@ class LinkFinder(HTMLParser):
 		self.urls_css = []
 		self.urls_js = []
 		self.urls_a = []
-		self.urls_unique_domains = []
 		self.normalized_urls = []
-		self.suggest_urls = []
-		self.url_freq = dict()
-		self.url_precentage = dict()
 
 
 	def curl_website(self):
@@ -41,7 +37,7 @@ class LinkFinder(HTMLParser):
 		if self.url_scanned[-1] == "/":
 			self.url_scanned = self.url_scanned[0:-1]
 
-		logging.info(self.url_scanned)
+		#logging.info(self.url_scanned)
 		r = requests.get(self.url_scanned)
 
 		if r.status_code is not requests.codes.ok:
@@ -96,14 +92,8 @@ class LinkFinder(HTMLParser):
 
 		try:
 			self.curl_website()
-
 			self.remove_junk_urls()
-			#if self.spider > 0:
-				#self.spider_urls()
-
 			self.normalize_all_urls()
-			#self.get_unique_domains()
-			#self.get_domain_percentage()
 		except:
 			print("There was an error")
 
@@ -147,7 +137,6 @@ class LinkFinder(HTMLParser):
 		return url
 
 	# Removes email and phone number urls
-	# WIP
 	def remove_junk_urls(self):
 		self.urls_a = [x for x in self.urls_a if not self.junk_url(x)]
 
@@ -156,47 +145,3 @@ class LinkFinder(HTMLParser):
 		if url[0:11] == "javascript:":
 			#logging.info("Removing junk url in list")
 			return True
-
-
-	def get_domain(self, url):
-		return url.split("//")[-1].split('/')[0]
-
-
-
-	def get_unique_domains(self):
-		for url in self.normalized_urls:
-			#logging.info("URL: " + url)
-			domain = self.get_domain(url)
-			#logging.info("DOMAIN: " + domain)
-			if domain not in self.urls_unique_domains:
-				self.urls_unique_domains.append(domain)
-				self.url_freq[domain] = 1
-			else:
-				self.url_freq[domain] += 1
-		pass
-
-	# WIP
-	def get_domain_percentage(self):
-		total_count = 0
-		for key, value in self.url_freq.items():
-			total_count += value
-
-		for key in self.url_freq:
-			count = self.url_freq[key]
-			self.url_precentage[key] = (count * 100) / total_count
-			logging.info("Percentage for " + key + ": " + str(self.url_precentage[key]))
-
-		pass
-
-
-	# Future Feature: run the analysis on subpages on the domain to get more accurate results
-	# WIP
-	def spider_urls(self):
-		for url in self.urls_a: #these will all be links
-			#logging.info("Spider: %s - Main: %s", self.get_domain(url), self.url_scanned)
-			if self.get_domain(url).find(self.url_scanned) != 0:
-				#logging.info("Spidering: " + url)
-				page = LinkFinder(url, spider=self.spider-1)  #todo: make this multithreaded
-				page.analyze()
-				for spider_url in page.urls:
-					self.urls.append(spider_url)
