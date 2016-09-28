@@ -22,11 +22,17 @@ if DEBUG:
 else:
     logging.basicConfig(level=logging.ERROR, format='%(levelname)s: %(asctime)s - %(message)s')
 
+# This is for loading the icon using the single file build process
+if hasattr(sys, '_MEIPASS'):
+    ico_path = os.path.join(sys._MEIPASS, "url.ico")
+else:
+    ico_path = "url.ico"
 
 
 class MainWindow(ttk.Frame):
     def __init__(self, master):
         self.master = master
+        self.master.iconbitmap(default=ico_path)
         self.master.title(string="URL Finder")
         self.master.minsize(width=250, height=300)
         self.master.maxsize(width=300, height=300)
@@ -37,7 +43,7 @@ class MainWindow(ttk.Frame):
         self.file.add_command(label="Exit", command=self.master.quit)
         self.edit = Menu(self.master, tearoff=False)
         self.edit.add_checkbutton(label="Show All", variable=self.show_all, command=self.update_list)
-        
+
         self.menubar = Menu(self.master)
         self.menubar.add_cascade(label="File", menu=self.file)
         self.menubar.add_cascade(label="Edit", menu=self.edit)
@@ -118,7 +124,7 @@ class MainWindow(ttk.Frame):
                 Supporting Url Finder
                 Version: ''' + VERSION
         messagebox.showinfo("About", about)
-        
+
 
 
 
