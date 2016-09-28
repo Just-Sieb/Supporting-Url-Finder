@@ -16,11 +16,24 @@ class MainWindow(ttk.Frame):
         self.master = master
         self.master.title(string="URL Finder")
         self.master.minsize(width=250, height=300)
-        self.master.maxsize(width=250, height=300)
+        self.master.maxsize(width=300, height=500)
+
+        self.show_all = BooleanVar()
+        self.file = Menu(self.master, tearoff=False)
+        self.file.add_command(label="Exit", command=self.master.quit)
+        self.edit = Menu(self.master, tearoff=False)
+        self.edit.add_checkbutton(label="Show All", variable=self.show_all, command=self.update_list)
+        
+        self.menubar = Menu(self.master)
+        self.menubar.add_cascade(label="File", menu=self.file)
+        self.menubar.add_cascade(label="Edit", menu=self.edit)
+
+        self.master.config(menu=self.menubar)
 
         self.url = StringVar()
         self.url_analyzer = None
         self.list_of_urls = []
+        self.url_dict = dict()
 
         self.frame = ttk.Frame(self.master)
         self.entry = ttk.Entry(self.frame, textvariable=self.url)
@@ -41,9 +54,13 @@ class MainWindow(ttk.Frame):
     def populate_list(self, url_percentage):
         del self.list_of_urls[:]
         for url, percentage in sorted(url_percentage.items(), key=lambda x: x[1]):
-            if percentage >= 1:
+            if self.show_all.get() is True:
                 row = str(round(percentage)) + ": " + url
                 self.list_of_urls.append(row)
+            else:
+                if percentage >= 1:
+                    row = str(round(percentage)) + ": " + url
+                    self.list_of_urls.append(row)
 
         for row in self.list_of_urls:
             self.list.insert(0, row)
@@ -68,12 +85,18 @@ class MainWindow(ttk.Frame):
                 pm.analyze_potential_urls()
                 break
 
+        self.url_dict = pm.url_percentage
         self.populate_list(pm.url_percentage)
         self.enter.config(text="Find Urls")
 
 
     def on_enter(self, event):
         self.on_click()
+
+
+    def update_list(self):
+        self.list.delete(0, END)
+        self.populate_list(self.url_dict)
 
 
 

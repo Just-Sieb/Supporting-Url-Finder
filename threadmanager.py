@@ -129,7 +129,6 @@ class ProcessManager(Thread):
     def get_domain_percentage(self):
         total_count = 0
         for key, value in self.url_freq.items():
-            #logging.info("Key: %s - Value: %d", key, value)
             total_count += value
 
         for key in self.url_freq:
