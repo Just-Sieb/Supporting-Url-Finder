@@ -13,20 +13,25 @@ import threading
 import time
 #import yappi
 import logging
+import platform
 
 DEBUG = False
 VERSION = "1.0.0"
+
 
 if DEBUG:
     logging.basicConfig(filename="url.log", level=logging.INFO, filemode='w', format='%(levelname)s: %(asctime)s - %(message)s')
 else:
     logging.basicConfig(level=logging.ERROR, format='%(levelname)s: %(asctime)s - %(message)s')
 
+
 # This is for loading the icon using the single file build process
-if hasattr(sys, '_MEIPASS'):
-    ico_path = os.path.join(sys._MEIPASS, "url.ico")
-else:
-    ico_path = "url.ico"
+if platform.system() == 'Windows':
+    if hasattr(sys, '_MEIPASS'):
+        ico_path = os.path.join(sys._MEIPASS, "url.ico")
+    else:
+        ico_path = "url.ico"
+
 
 
 class MainWindow(ttk.Frame):
