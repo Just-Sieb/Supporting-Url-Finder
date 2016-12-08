@@ -40,7 +40,7 @@ class ProcessManager(Thread):
 
     def add_urls_to_list(self, scan_urls, potential_urls):
         for url in scan_urls:
-            if url not in self.urls_scanned and url.find(self.get_domain(self.init_url)):
+            if url not in self.urls_scanned and url.find(self.get_domain(self.init_url)) != -1:
                 self.urls_to_scan.append(url)
 
         for url in potential_urls:
@@ -62,7 +62,6 @@ class ProcessManager(Thread):
 
 
     def start_analyser(self, url):
-        #logging.info("Started new thread. Number of active threads %d", self.active_threads)
         self.number_of_threads_created += 1
         lf = LinkFinder(url)
         lf.analyze()
@@ -96,10 +95,10 @@ class ProcessManager(Thread):
     def analyze_potential_urls(self):
         self.get_unique_domains()
         self.get_domain_percentage()
-        pass
 
-    # Returns the domain of the url given
+
     def get_domain(self, url):
+        ''' Returns the domain of the url '''
         domain = None
         try:
             domain = url.split("//")[1].split('/')[0]
@@ -108,8 +107,9 @@ class ProcessManager(Thread):
         return domain
 
 
-    # Finds the unique domains and the number of times they show up
+
     def get_unique_domains(self):
+        '''Finds the unique domains and the number of times they show up'''
         for url in self.potential_urls:
             domain = self.get_domain(url)
 
@@ -121,8 +121,9 @@ class ProcessManager(Thread):
                 else:
                     self.url_freq[domain] += 1
 
-    # Calculates the percentage a domain shows up in the potential URLs list
+
     def get_domain_percentage(self):
+        '''Calculates the percentage a domain shows up in the potential URLs list'''
         total_count = 0
         for key, value in self.url_freq.items():
             total_count += value
@@ -130,4 +131,3 @@ class ProcessManager(Thread):
         for key in self.url_freq:
             count = self.url_freq[key]
             self.url_percentage[key] = (count * 100) / total_count
-            #logging.info("Percentage for " + key + ": " + str(self.url_precentage[key]))

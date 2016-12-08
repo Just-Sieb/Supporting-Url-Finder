@@ -4,18 +4,18 @@ Supporting Url Finder is opensource tool for finding what domains a site uses to
 This tool is maintain by Justin Siebert and is licensed under the MIT License
 '''
 
-from tkinter import *
+from tkinter import Menu, BooleanVar, StringVar, sys, Tk, W, E, N, S, BOTH
 from tkinter import messagebox
 from tkinter import ttk
 from linkanalyzer import LinkFinder
 from threadmanager import ProcessManager
 import threading
 import time
-#import yappi
+from os import path
 import logging
 import platform
 
-DEBUG = False
+DEBUG = True
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 1
@@ -35,7 +35,7 @@ if platform.system() == 'Windows':
     if hasattr(sys, '_MEIPASS'):
         ico_path = os.path.join(sys._MEIPASS, "url.ico")
     else:
-        ico_path = "url.ico"
+        ico_path = path.join(path.abspath(path.join(path.dirname(__file__), '..')), "url.ico")
 
 
 
@@ -53,7 +53,7 @@ class MainWindow(ttk.Frame):
         self.master.iconbitmap(default=ico_path)
         self.master.title(string="URL Finder")
         self.master.minsize(width=300, height=375)
-        self.master.maxsize(width=600, height=375)
+        self.master.maxsize(width=800, height=375)
 
         # Top Menu
         self.show_all = BooleanVar()
@@ -68,14 +68,19 @@ class MainWindow(ttk.Frame):
         self.menubar.add_cascade(label="Edit", menu=self.edit)
         self.master.config(menu=self.menubar)
 
-        # Right Click Menu
+        # Right-click menu for entry widget
+        self.right_click_entry = Menu(self.master, tearoff=False)
+        self.right_click_entry.add_command(label="Copy", command=self.copy_from_entry)
+        self.right_click_entry.add_command(label="Paste", command=self.paste_to_entry)
+
+        # Right-click menu for treeview
         self.right_click = Menu(self.master, tearoff=False)
         self.right_click.add_command(label="Copy", command=self.get_selected_url)
 
         # Frame containing text box and enter button
         self.top_frame = ttk.Frame(self.master)
-        self.top_frame.columnconfigure(0, minsize=200)
-        self.top_frame.columnconfigure(1, minsize=100)
+        self.top_frame.columnconfigure(0, minsize=200, weight=10)
+        self.top_frame.columnconfigure(1, minsize=100, weight=1)
 
         # Frame containing urls and scrollbar
         self.bottom_frame = ttk.Frame(self.master)
@@ -85,6 +90,7 @@ class MainWindow(ttk.Frame):
         # Url entry box and enter button
         self.entry = ttk.Entry(self.top_frame, textvariable=self.url)
         self.entry.bind('<Return>', self.on_enter)
+        self.entry.bind('<Button-3>', self.entry_popup)
         self.enter = ttk.Button(self.top_frame, text="Find Urls", command=self.on_click)
 
         self.entry.grid(row=0, column=0, sticky=W+E, padx=5, pady=5)
@@ -159,12 +165,27 @@ class MainWindow(ttk.Frame):
         self.get_selected_url()
 
 
+    def add_to_clipboard(self, copy):
+        self.master.clipboard_clear()
+        self.master.clipboard_append(copy)
+
+
+    def get_from_clipboad(self):
+        return self.master.clipboard_get()
+
+
     def get_selected_url(self):
         curr_item = self.list.focus()
         item_dict = self.list.item(curr_item)
-        self.master.clipboard_clear()
-        print(item_dict)
-        self.master.clipboard_append(item_dict['values'][1])
+        self.add_to_clipboard(item_dict['values'][1])
+
+
+    def paste_to_entry(self):
+        self.url.set(self.get_from_clipboad())
+
+
+    def copy_from_entry(self):
+        self.add_to_clipboard(self.url.get())
 
 
     def treeview_popup(self, event):
@@ -173,6 +194,9 @@ class MainWindow(ttk.Frame):
         self.list.focus(item) # Focus Row
         self.right_click.post(event.x_root, event.y_root) # Popup menu
 
+
+    def entry_popup(self, event):
+        self.right_click_entry.post(event.x_root, event.y_root)
 
     def on_enter(self, event):
         self.on_click()
