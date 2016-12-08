@@ -15,7 +15,7 @@ import time
 import logging
 import platform
 
-DEBUG = True
+DEBUG = False
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 1
@@ -42,12 +42,18 @@ if platform.system() == 'Windows':
 class MainWindow(ttk.Frame):
     def __init__(self, master):
 
+        # Variables
+        self.url = StringVar()
+        self.url_analyzer = None
+        self.list_of_urls = []
+        self.url_dict = dict()
+
         # Main Window
         self.master = master
         self.master.iconbitmap(default=ico_path)
         self.master.title(string="URL Finder")
         self.master.minsize(width=300, height=375)
-        self.master.maxsize(width=400, height=375)
+        self.master.maxsize(width=600, height=375)
 
         # Top Menu
         self.show_all = BooleanVar()
@@ -62,43 +68,46 @@ class MainWindow(ttk.Frame):
         self.menubar.add_cascade(label="Edit", menu=self.edit)
         self.master.config(menu=self.menubar)
 
-        # Righ Click Menu
-        self.right_click = Menu(self.master)
+        # Right Click Menu
+        self.right_click = Menu(self.master, tearoff=False)
         self.right_click.add_command(label="Copy", command=self.get_selected_url)
 
-        self.url = StringVar()
-        self.url_analyzer = None
-        self.list_of_urls = []
-        self.url_dict = dict()
-
+        # Frame containing text box and enter button
         self.top_frame = ttk.Frame(self.master)
         self.top_frame.columnconfigure(0, minsize=200)
         self.top_frame.columnconfigure(1, minsize=100)
 
+        # Frame containing urls and scrollbar
         self.bottom_frame = ttk.Frame(self.master)
-        self.bottom_frame.columnconfigure(0, minsize=260)
-        self.bottom_frame.columnconfigure(1, minsize=50)
+        self.bottom_frame.columnconfigure(0, minsize=260, weight=1000)
+        self.bottom_frame.columnconfigure(1, minsize=25, weight=1)
 
+        # Url entry box and enter button
         self.entry = ttk.Entry(self.top_frame, textvariable=self.url)
         self.entry.bind('<Return>', self.on_enter)
         self.enter = ttk.Button(self.top_frame, text="Find Urls", command=self.on_click)
 
+        self.entry.grid(row=0, column=0, sticky=W+E, padx=5, pady=5)
+        self.enter.grid(row=0, column=1, sticky=W+E, padx=5, pady=5)
+
+        # Url list treeview
         self.list = ttk.Treeview(self.bottom_frame, height=15, columns=['percentage', 'domain'])
         self.list['show'] = 'headings'
         self.list.column('#0', width=0)
         self.list.column('percentage', width=30, minwidth=30, stretch=False)
-        self.list.heading('percentage', text="%")
         self.list.column('domain', width=250, minwidth=200, stretch=False)
-        self.list.heading('domain', text='Domain')
-        self.list.bind('<Control-c>', self.get_selected_url)
-        self.list.bind('<Button-3>', self.popup)
 
-        self.entry.grid(row=0, column=0, sticky=W+E, padx=5, pady=5)
-        self.enter.grid(row=0, column=1, sticky=W+E, padx=5, pady=5)
+        self.list.heading('percentage', text="%")
+        self.list.heading('domain', text='Domain')
+
+        self.list.bind('<Control-c>', self.ctrl_c)
+        self.list.bind('<Button-3>', self.treeview_popup)
+
         self.list.grid(row=1, column=0, sticky=W+E+N+S, padx=5, pady=5)
 
+        # Scrollbar widget
         self.scrollbar = ttk.Scrollbar(self.bottom_frame)
-        self.scrollbar.grid(column=1, row=1, sticky=N+S)
+        self.scrollbar.grid(column=1, row=1, sticky=N+S+E+W)
         self.list.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.list.yview)
 
@@ -118,6 +127,7 @@ class MainWindow(ttk.Frame):
 
         for row in self.list_of_urls:
             self.list.insert('', 0, values=row)
+
 
     def on_click(self):
         self.list.delete(*self.list.get_children())
@@ -145,17 +155,24 @@ class MainWindow(ttk.Frame):
         self.enter.config(text="Find Urls")
 
 
-    def get_selected_url(self, event):
+    def ctrl_c(self, event):
+        self.get_selected_url()
+
+
+    def get_selected_url(self):
         curr_item = self.list.focus()
         item_dict = self.list.item(curr_item)
         self.master.clipboard_clear()
+        print(item_dict)
         self.master.clipboard_append(item_dict['values'][1])
 
 
-    def popup(self, event):
-        item = self.list.identify_element(event.x_root, event.y_root)
-        print(item)
-        self.right_click.post(event.x_root, event.y_root)
+    def treeview_popup(self, event):
+        item = self.list.identify_row(event.y) # Get Row
+        self.list.selection_set(item) # Highlight Row
+        self.list.focus(item) # Focus Row
+        self.right_click.post(event.x_root, event.y_root) # Popup menu
+
 
     def on_enter(self, event):
         self.on_click()
@@ -169,8 +186,6 @@ class MainWindow(ttk.Frame):
     def display_about(self):
         about = "Supporting Url Finder Version: %s" % VERSION
         messagebox.showinfo("About", about)
-
-
 
 
 if __name__ == '__main__':
