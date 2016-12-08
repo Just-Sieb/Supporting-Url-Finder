@@ -29,6 +29,7 @@ class LinkFinder(HTMLParser):
 		self.urls_js = []
 		self.urls_a = []
 		self.normalized_urls = []
+		self.normalized_urls_a = []
 
 		self.status_code = None
 
@@ -92,10 +93,6 @@ class LinkFinder(HTMLParser):
 
 	# After running the feed function, call this function to run the analysis.
 	def analyze(self):
-		#print("Running analyzer")
-		#count += 1
-		#logging.info("Stated analyzer for " + self.url_scanned)
-
 		try:
 			self.curl_website()
 		except HTTPError as err:
@@ -110,15 +107,13 @@ class LinkFinder(HTMLParser):
 		except ConnectionError as err:
 			logging.error(err)
 
-
-
 		self.remove_junk_urls()
 		self.normalize_all_urls()
 
 
 	def normalize_all_urls(self):
-		for url in self.urls:
-			self.normalized_urls.append(self.normalize_url(url))
+		self.urls   = [self.normalize_url(x) for x in self.urls]
+		self.urls_a = [self.normalize_url(x) for x in self.urls_a]
 
 
 	# this function is to create a full url if it is only give the directory
@@ -151,15 +146,18 @@ class LinkFinder(HTMLParser):
 				else:
 					url = self.url_scanned[0:-2] + url
 
-		#logging.info("URL_AFTER: " + url)
 		return url
 
 	# Removes email and phone number urls
 	def remove_junk_urls(self):
 		self.urls_a = [x for x in self.urls_a if not self.junk_url(x)]
+		self.urls   = [x for x in self.urls if not self.junk_url(x)]
 
 
 	def junk_url(self, url):
 		if url[0:11] == "javascript:":
-			#logging.info("Removing junk url in list")
+			return True
+		elif url[0:7] == "mailto:":
+			return True
+		elif url[0:4] == "tel:":
 			return True
