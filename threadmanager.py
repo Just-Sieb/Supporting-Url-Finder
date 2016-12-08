@@ -40,7 +40,7 @@ class ProcessManager(Thread):
 
     def add_urls_to_list(self, scan_urls, potential_urls):
         for url in scan_urls:
-            if url not in self.urls_scanned:
+            if url not in self.urls_scanned and url.find(self.get_domain(self.init_url)):
                 self.urls_to_scan.append(url)
 
         for url in potential_urls:
@@ -66,7 +66,7 @@ class ProcessManager(Thread):
         self.number_of_threads_created += 1
         lf = LinkFinder(url)
         lf.analyze()
-        self.add_urls_to_list(lf.urls_a ,lf.normalized_urls)
+        self.add_urls_to_list(lf.urls_a ,lf.urls)
         self.process_manager()
         self.active_threads -= 1
 
@@ -86,7 +86,7 @@ class ProcessManager(Thread):
                     url = self.urls_to_scan.popleft()
                 except:
                     break
-                
+
                 self.start_process(url)
 
                 if self.active_threads > 100:
@@ -107,7 +107,7 @@ class ProcessManager(Thread):
             domain = url.split("//")[-1].split('/')[0]
         return domain
 
-    
+
     # Finds the unique domains and the number of times they show up
     def get_unique_domains(self):
         for url in self.potential_urls:

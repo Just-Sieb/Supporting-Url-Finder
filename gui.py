@@ -15,8 +15,13 @@ import time
 import logging
 import platform
 
-DEBUG = False
-VERSION = "1.0.0"
+DEBUG = True
+
+VERSION_MAJOR = 1
+VERSION_MINOR = 1
+VERSION_BUILD = 0
+
+VERSION = "%d.%d.%d" % (VERSION_MAJOR, VERSION_MINOR, VERSION_BUILD)
 
 
 if DEBUG:
@@ -39,8 +44,8 @@ class MainWindow(ttk.Frame):
         self.master = master
         self.master.iconbitmap(default=ico_path)
         self.master.title(string="URL Finder")
-        self.master.minsize(width=250, height=300)
-        self.master.maxsize(width=300, height=300)
+        self.master.minsize(width=300, height=375)
+        self.master.maxsize(width=400, height=375)
 
         self.show_all = BooleanVar()
         self.file = Menu(self.master, tearoff=False)
@@ -60,38 +65,55 @@ class MainWindow(ttk.Frame):
         self.list_of_urls = []
         self.url_dict = dict()
 
-        self.frame = ttk.Frame(self.master)
-        self.entry = ttk.Entry(self.frame, textvariable=self.url)
-        self.entry.bind('<Return>', self.on_enter)
-        self.enter = ttk.Button(self.frame, text="Find Urls", command=self.on_click)
-        self.list = Listbox(self.frame, height=15)
-        self.entry.grid(row=0, column=0, sticky=W, padx=5, pady=5)
-        self.enter.grid(row=0, column=1, sticky=E, padx=5, pady=5)
-        self.list.grid(row=1, columnspan=2, sticky=W+E+N+S, padx=5, pady=5)
+        self.top_frame = ttk.Frame(self.master)
+        self.top_frame.columnconfigure(0, minsize=200)
+        self.top_frame.columnconfigure(1, minsize=100)
 
-        self.scrollbar = ttk.Scrollbar(self.frame)
-        self.scrollbar.grid(column=2, row=1, sticky=N+S)
+        self.bottom_frame = ttk.Frame(self.master)
+        self.bottom_frame.columnconfigure(0, minsize=260)
+        self.bottom_frame.columnconfigure(1, minsize=50)
+
+        self.entry = ttk.Entry(self.top_frame, textvariable=self.url)
+        self.entry.bind('<Return>', self.on_enter)
+        self.enter = ttk.Button(self.top_frame, text="Find Urls", command=self.on_click)
+
+        self.list = ttk.Treeview(self.bottom_frame, height=15, columns=['percentage', 'domain'])
+        self.list['show'] = 'headings'
+        self.list.column('#0', width=0)
+        self.list.column('percentage', width=30, minwidth=30, stretch=False)
+        self.list.heading('percentage', text="%")
+        self.list.column('domain', width=250, minwidth=200, stretch=False)
+        self.list.heading('domain', text='Domain')
+        self.list.bind('<Control-c>', self.get_selected_url)
+
+        self.entry.grid(row=0, column=0, sticky=W+E, padx=5, pady=5)
+        self.enter.grid(row=0, column=1, sticky=W+E, padx=5, pady=5)
+        self.list.grid(row=1, column=0, sticky=W+E+N+S, padx=5, pady=5)
+
+        self.scrollbar = ttk.Scrollbar(self.bottom_frame)
+        self.scrollbar.grid(column=1, row=1, sticky=N+S)
         self.list.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.list.yview)
 
-        self.frame.pack(fill=BOTH)
+        self.top_frame.pack(fill=BOTH)
+        self.bottom_frame.pack(fill=BOTH)
 
     def populate_list(self, url_percentage):
         del self.list_of_urls[:]
         for url, percentage in sorted(url_percentage.items(), key=lambda x: x[1]):
             if self.show_all.get() is True:
-                row = str(round(percentage)) + ": " + url
+                row = (str(round(percentage)), url)
                 self.list_of_urls.append(row)
             else:
                 if percentage >= 1:
-                    row = str(round(percentage)) + ": " + url
+                    row = (str(round(percentage)), url)
                     self.list_of_urls.append(row)
 
         for row in self.list_of_urls:
-            self.list.insert(0, row)
+            self.list.insert('', 0, values=row)
 
     def on_click(self):
-        self.list.delete(0, END)
+        self.list.delete(*self.list.get_children())
         self.enter.config(text="Running")
         url = self.url.get()
         t = threading.Thread(target=self.run_scan, args=(url,))
@@ -105,6 +127,7 @@ class MainWindow(ttk.Frame):
         while pm.continue_scanning:
             time.sleep(1)
             count += 1
+            # This is to keep the system from reaching a timeout
             if count > 20:
                 logging.info("Reached max timeout")
                 pm.analyze_potential_urls()
@@ -115,19 +138,23 @@ class MainWindow(ttk.Frame):
         self.enter.config(text="Find Urls")
 
 
+    def get_selected_url(self, event):
+        curr_item = self.list.focus()
+        item_dict = self.list.item(curr_item)
+        print(item_dict['values'][1])
+
+
     def on_enter(self, event):
         self.on_click()
 
 
     def update_list(self):
-        self.list.delete(0, END)
+        self.list.delete(*self.list.get_children())
         self.populate_list(self.url_dict)
 
 
     def display_about(self):
-        about = '''
-                Supporting Url Finder
-                Version: ''' + VERSION
+        about = "Supporting Url Finder Version: %s" % VERSION
         messagebox.showinfo("About", about)
 
 
