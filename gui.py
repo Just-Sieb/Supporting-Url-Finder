@@ -41,12 +41,15 @@ if platform.system() == 'Windows':
 
 class MainWindow(ttk.Frame):
     def __init__(self, master):
+
+        # Main Window
         self.master = master
         self.master.iconbitmap(default=ico_path)
         self.master.title(string="URL Finder")
         self.master.minsize(width=300, height=375)
         self.master.maxsize(width=400, height=375)
 
+        # Top Menu
         self.show_all = BooleanVar()
         self.file = Menu(self.master, tearoff=False)
         self.file.add_command(label="About", command=self.display_about)
@@ -57,8 +60,11 @@ class MainWindow(ttk.Frame):
         self.menubar = Menu(self.master)
         self.menubar.add_cascade(label="File", menu=self.file)
         self.menubar.add_cascade(label="Edit", menu=self.edit)
-
         self.master.config(menu=self.menubar)
+
+        # Righ Click Menu
+        self.right_click = Menu(self.master)
+        self.right_click.add_command(label="Copy", command=self.get_selected_url)
 
         self.url = StringVar()
         self.url_analyzer = None
@@ -85,6 +91,7 @@ class MainWindow(ttk.Frame):
         self.list.column('domain', width=250, minwidth=200, stretch=False)
         self.list.heading('domain', text='Domain')
         self.list.bind('<Control-c>', self.get_selected_url)
+        self.list.bind('<Button-3>', self.popup)
 
         self.entry.grid(row=0, column=0, sticky=W+E, padx=5, pady=5)
         self.enter.grid(row=0, column=1, sticky=W+E, padx=5, pady=5)
@@ -141,8 +148,14 @@ class MainWindow(ttk.Frame):
     def get_selected_url(self, event):
         curr_item = self.list.focus()
         item_dict = self.list.item(curr_item)
-        print(item_dict['values'][1])
+        self.master.clipboard_clear()
+        self.master.clipboard_append(item_dict['values'][1])
 
+
+    def popup(self, event):
+        item = self.list.identify_element(event.x_root, event.y_root)
+        print(item)
+        self.right_click.post(event.x_root, event.y_root)
 
     def on_enter(self, event):
         self.on_click()
