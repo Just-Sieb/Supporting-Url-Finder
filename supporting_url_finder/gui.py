@@ -15,7 +15,7 @@ from os import path
 import logging
 import platform
 
-DEBUG = True
+DEBUG = False
 
 VERSION_MAJOR = 1
 VERSION_MINOR = 1
