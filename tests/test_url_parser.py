@@ -10,9 +10,6 @@ class TestUrlParser(unittest.TestCase):
         self.twitter = LinkFinder("twitter.com")
         self.twitter.base_url = "twitter.com"
 
-        self.github = LinkFinder("github.com")
-        self.github.base_url = "github.com"
-
         self.covenanteyes = LinkFinder("covenanteyes.com")
         self.covenanteyes.base_url = "covenanteyes.com"
 
